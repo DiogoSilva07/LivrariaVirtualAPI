@@ -7,7 +7,7 @@ namespace LivrariaVirtualAPI.Models
         public LivrariaVirtualContext(DbContextOptions<LivrariaVirtualContext> options)
            : base(options) { }
 
-        public DbSet<Produto> Produtos { get; set; }
+        public DbSet<Produto> Produtos { get; set; } 
 
     }
 }
