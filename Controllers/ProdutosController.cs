@@ -17,12 +17,34 @@ namespace LivrariaVirtualAPI.Controllers
         }
 
         [HttpGet]
-        public List<Produto> Get()
+        public List<Produto> Listar()
         {
             var produtos = produtosService.ObterTodos();
 
             return produtos;
         }
 
+        [HttpPost]
+        public List<Produto> Cadastrar([FromBody] ProdutoRequest request)
+        {
+            var produtosCadastrados = produtosService.Cadastrar(request.Nome, request.Descricao, request.Preco, request.Estoque, request.Categoria);
+
+            return produtosCadastrados;
+        }
+
+        [HttpDelete("{id}")]
+        public List<Produto> Deletar([FromRoute]int id)
+        {
+            produtosService.Remover(id);
+
+            return produtosService.ObterTodos();
+        }
+        [HttpPut("{id}")]
+        public List<Produto> Atualizar(ProdutoRequest request, [FromRoute] int id)
+        {
+            produtosService.Atualizar(id, request.Nome, request.Descricao, request.Preco, request.Estoque, request.Categoria);
+
+            return produtosService.ObterTodos();
+        }
     }
 }

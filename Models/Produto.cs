@@ -14,8 +14,6 @@ namespace LivrariaVirtualAPI.Models
             [StringLength(500)]
             public string Descricao { get; set; }
 
-            public bool Status { get; set; } // Disponível/Indisponível
-
             [Required]
             public decimal Preco { get; set; }
 
