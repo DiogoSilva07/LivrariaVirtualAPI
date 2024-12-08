@@ -1,7 +1,8 @@
-﻿using LivrariaVirtualAPI.Models;
-using LivrariaVirtualAPI.Services;
-using Microsoft.AspNetCore.Http;
+﻿using LivrariaVirtualAPI.Data;
+using LivrariaVirtualAPI.Models.Produtos;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace LivrariaVirtualAPI.Controllers
 {
@@ -9,42 +10,89 @@ namespace LivrariaVirtualAPI.Controllers
     [ApiController]
     public class ProdutosController : ControllerBase
     {
-        private ProdutosService produtosService;
+        private readonly LivrariaVirtualContext _context;
 
-        public ProdutosController()
+        public ProdutosController(LivrariaVirtualContext context)
         {
-            produtosService = new ProdutosService();
+            _context = context;
         }
 
-        [HttpGet]
-        public List<Produto> Listar()
-        {
-            var produtos = produtosService.ObterTodos();
 
-            return produtos;
+        [HttpGet]
+        public ActionResult<List<Produto>> Listar()
+        {
+
+            return Ok(_context.Produto.ToList());
+        }
+
+        [HttpGet("{id}")]
+        public ActionResult<Produto> Listar([FromRoute] int id)
+        {
+            var produto = _context.Produto.Find(id);
+
+            if (produto == null) return NotFound();
+
+            return Ok(produto);
         }
 
         [HttpPost]
-        public List<Produto> Cadastrar([FromBody] ProdutoRequest request)
+        public ActionResult<Produto> Cadastrar([FromBody] ProdutoRequest request)
         {
-            var produtosCadastrados = produtosService.Cadastrar(request.Nome, request.Descricao, request.Preco, request.Estoque, request.Categoria);
+            var produto = new Produto()
+            {
+                Nome = request.Nome,
+                Descricao = request.Descricao,
+                Preco = request.Preco,
+                Status = request.Status,
+                Estoque = request.Estoque,
+                Categoria = request.Categoria,
+            };
 
-            return produtosCadastrados;
+            _context.Produto.Add(produto);
+            _context.SaveChanges();
+
+
+            return Ok(produto);
+        }
+
+        [HttpPut("{id}")]
+        [Authorize(Roles = "Gerente, Funcionário")]
+        public ActionResult<Produto> Atualizar([FromRoute] int id, [FromBody] ProdutoRequest request)
+        {
+            var produto = new Produto()
+            {
+                Id = id,
+                Nome = request.Nome,
+                Descricao = request.Descricao,
+                Preco = request.Preco,
+                Status = request.Status,
+                Estoque = request.Estoque,
+                Categoria = request.Categoria,
+            };
+
+            if (id <= 0) return BadRequest();
+
+            _context.Entry(produto).State = EntityState.Modified;
+            _context.SaveChanges();
+
+            return Ok(produto);
         }
 
         [HttpDelete("{id}")]
-        public List<Produto> Deletar([FromRoute]int id)
+        [Authorize(Roles = "Gerente")]
+        public ActionResult<Produto> Deletar([FromRoute] int id)
         {
-            produtosService.Remover(id);
+            if (id <= 0) return BadRequest();
 
-            return produtosService.ObterTodos();
-        }
-        [HttpPut("{id}")]
-        public List<Produto> Atualizar(ProdutoRequest request, [FromRoute] int id)
-        {
-            produtosService.Atualizar(id, request.Nome, request.Descricao, request.Preco, request.Estoque, request.Categoria);
+            var produto = _context.Produto.Find(id);
+            if (produto == null) return NotFound();
 
-            return produtosService.ObterTodos();
+
+            _context.Produto.Remove(produto);
+            _context.SaveChanges();
+
+            return NoContent();
         }
+
     }
 }
